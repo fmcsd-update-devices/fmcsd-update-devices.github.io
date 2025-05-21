@@ -226,7 +226,6 @@
       }
     });
 
-    // Also open file dialog if user presses Enter or Space on the custom label
     fileUploadLabel.addEventListener('keydown', (e) => {
       if (e.key === 'Enter' || e.key === ' ') {
         e.preventDefault();
@@ -276,11 +275,11 @@
     }
 
     async function getGPTResponse(prompt) {
-      const apiKey = "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";
+      const apiKey = "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";
       const endpoint = "https://openrouter.ai/api/v1/chat/completions";
 
       try {
-        const res = await fetch(endpoint, {
+        const response = await fetch(endpoint, {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
@@ -288,14 +287,20 @@
           },
           body: JSON.stringify({
             model: "openai/gpt-3.5-turbo",
-            messages: [{ role: "user", content: prompt }]
+            messages: [{ role: "user", content: prompt }],
+            temperature: 0.7
           })
         });
 
-        const data = await res.json();
-        return data.choices?.[0]?.message?.content || "No response.";
-      } catch (err) {
-        console.error(err);
+        if (!response.ok) {
+          const errorText = await response.text();
+          throw new Error(`API error ${response.status}: ${errorText}`);
+        }
+
+        const data = await response.json();
+        return data.choices?.[0]?.message?.content || "No response from API.";
+      } catch (error) {
+        console.error("Error fetching AI response:", error);
         return "❌ Error connecting to AI.";
       }
     }
